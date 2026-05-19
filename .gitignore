@@ -64,3 +64,6 @@ secrets/*.crt
 
 # FILE BACKUP RULE folders (pre-edit backups)
 _backup/
+
+# Incremental TypeScript build cache
+*.tsbuildinfo
