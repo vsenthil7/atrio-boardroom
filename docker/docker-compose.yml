@@ -49,8 +49,8 @@ services:
       ATRIO_ENV: ${ATRIO_ENV:-demo}
       DATABASE_URL: postgresql+asyncpg://atrio:${POSTGRES_PASSWORD:-atrio_dev_password}@postgres:5432/atrio
       JWT_TEST_SECRET: ${JWT_TEST_SECRET:-change-me-in-prod-this-is-32-chars-min}
-      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private.pem
-      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public.pem
+      JWT_PRIVATE_KEY_PATH: /app/secrets/jwt_private.pem
+      JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
       ATRIO_MOCK_INFERENCE: ${ATRIO_MOCK_INFERENCE:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       FEATHERLESS_API_KEY: ${FEATHERLESS_API_KEY:-}
@@ -67,10 +67,8 @@ services:
     volumes:
       - ../config:/app/config:ro
       - ../prompts:/app/prompts:ro
+      - ../secrets:/app/secrets:ro
       - boardpack_data:/tmp/atrio-boardpacks
-    secrets:
-      - jwt_private.pem
-      - jwt_public.pem
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     healthcheck:
@@ -146,9 +144,3 @@ volumes:
   postgres_data:
   minio_data:
   boardpack_data:
-
-secrets:
-  jwt_private.pem:
-    file: ../secrets/jwt_private.pem
-  jwt_public.pem:
-    file: ../secrets/jwt_public.pem
