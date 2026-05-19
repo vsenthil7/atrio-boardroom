@@ -1,0 +1,62 @@
+[verify-a] === ATRIO Pitch Deck · Structural review ===
+
+pdf      : C:\Users\v_sen\Documents\Projects\0010_AT_Hack0021_ATRIO_MilanAIWeek\atrio\submission_media\atrio-pitch-deck-20260519_105149.pdf
+size     : 402.3 KB
+pages    : 12
+
+assertions: 54/54 PASS (100 %)
+
+  [PASS] A0.1  pdf opens cleanly
+  [PASS] A0.2  page count == 12
+  [PASS] A0.3  page 1 width ~= 960 pts (16:9 widescreen)
+  [PASS] A0.4  page 1 height ~= 540 pts
+  [PASS] B1.1  page 1 contains 'atrio'
+  [PASS] B1.2  page 1 contains 'milan ai week'
+  [PASS] B2.1  page 2 contains 'the problem'
+  [PASS] B2.2  page 2 contains 'founders'
+  [PASS] B3.1  page 3 contains 'the solution'
+  [PASS] B3.2  page 3 contains 'debate'
+  [PASS] B3.3  page 3 contains 'enforce'
+  [PASS] B3.4  page 3 contains 'audit'
+  [PASS] B4.1  page 4 contains 'six specialists'
+  [PASS] B4.2  page 4 contains 'cfo'
+  [PASS] B4.3  page 4 contains 'cto'
+  [PASS] B4.4  page 4 contains 'cmo'
+  [PASS] B4.5  page 4 contains 'coo'
+  [PASS] B4.6  page 4 contains 'counsel'
+  [PASS] B4.7  page 4 contains 'facilitator'
+  [PASS] B5.1  page 5 contains 'treasury'
+  [PASS] B5.2  page 5 contains 'mandate'
+  [PASS] B5.3  page 5 contains 'two-party'
+  [PASS] B5.4  page 5 contains 'proposed'
+  [PASS] B5.5  page 5 contains 'first_authorised'
+  [PASS] B5.6  page 5 contains 'executed'
+  [PASS] B6.1  page 6 contains 'live demo'
+  [PASS] B6.2  page 6 contains 'boardroom debate'
+  [PASS] B6.3  page 6 contains 'second human'
+  [PASS] B6.4  page 6 contains 'boardpack'
+  [PASS] B6.5  page 6 contains 'audit export'
+  [PASS] B7.1  page 7 contains 'proof'
+  [PASS] B7.2  page 7 contains '381'
+  [PASS] B7.3  page 7 contains '90.68'
+  [PASS] B7.4  page 7 contains '24 / 24'
+  [PASS] B7.5  page 7 contains '14 / 14'
+  [PASS] B8.1  page 8 contains 'architecture'
+  [PASS] B8.2  page 8 contains 'frontend'
+  [PASS] B8.3  page 8 contains 'api'
+  [PASS] B8.4  page 8 contains 'infra'
+  [PASS] B9.1  page 9 contains 'sponsor pools'
+  [PASS] B9.2  page 9 contains 'vultr'
+  [PASS] B9.3  page 9 contains 'gemini'
+  [PASS] B9.4  page 9 contains 'featherless'
+  [PASS] B9.5  page 9 contains 'speechmatics'
+  [PASS] B9.6  page 9 contains 'kraken'
+  [PASS] B10.1  page 10 contains 'beyond the mvp'
+  [PASS] B10.2  page 10 contains 'v1.1'
+  [PASS] B10.3  page 10 contains 'v1.2'
+  [PASS] B11.1  page 11 contains 'team'
+  [PASS] B11.2  page 11 contains 'ask'
+  [PASS] B11.3  page 11 contains 'vultr credits'
+  [PASS] B12.1  page 12 contains 'mandate-enforced'
+  [PASS] B12.2  page 12 contains 'github.com/vsenthil7/atrio-boardroom'
+  [PASS] B12.3  page 12 contains 'apache 2.0'

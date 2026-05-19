@@ -1,0 +1,350 @@
+{
+  "summary": {
+    "pdf": "C:\\Users\\v_sen\\Documents\\Projects\\0010_AT_Hack0021_ATRIO_MilanAIWeek\\atrio\\submission_media\\atrio-pitch-deck-20260519_105149.pdf",
+    "pdf_size_kb": 402.3,
+    "page_count": 12,
+    "page_texts_preview": {
+      "1": "at-hack0021 \u00b7 milan ai week 2026 | atrio | your ai boardroom. | six specialist agents. one audited table. mandate-enforced treasury. | milan ai week 2026 \u00b7 at-hack0021 ...",
+      "2": "at-hack0021 \u00b7 milan ai week 2026 | the problem | founders and family offices decide alone. | big decisions go one of two ways today: | \u2192 delegated to a single advisor \u2014...",
+      "3": "at-hack0021 \u00b7 milan ai week 2026 | the solution | an ai boardroom that holds a real debate. | debate | six specialist agents (cfo, cto, cmo, coo, counsel,  | facilitator)...",
+      "4": "at-hack0021 \u00b7 milan ai week 2026 | six specialists | distinct personas. distinct models. one table. | cfo | capital + burn | gemini 2.5 flash | cto | tech feasibility | feather...",
+      "5": "at-hack0021 \u00b7 milan ai week 2026 | treasury \u00b7 mandate \u00b7 two-party | the agents can do, not just advise. | proposed | \u2192 | first_authorised | \u2192 | fully_authorised | \u2192 | executed | fo...",
+      "6": "at-hack0021 \u00b7 milan ai week 2026 | live demo \u00b7 4 stages | what you will see in the 2-minute video. | 1 | boardroom debate | founder asks a q3 hiring question; pdf burn-pl...",
+      "7": "at-hack0021 \u00b7 milan ai week 2026 | proof, not promises | audit-grade comes from tests, not slogans. | 381 / 381 | backend tests pass | 90.68 % | line coverage (gate 85 %) | 1...",
+      "8": "at-hack0021 \u00b7 milan ai week 2026 | architecture | boring, predictable, audit-grade. | frontend | react \u00b7 vite \u00b7 tailwind | caddy spa on :8080 (pwa-ready) | api | fastapi \u00b7 sq...",
+      "9": "at-hack0021 \u00b7 milan ai week 2026 | sponsor pools utilised | five pools. real integration. no demoware. | vultr | compute + deployment | vm target for the public demo url | ...",
+      "10": "at-hack0021 \u00b7 milan ai week 2026 | beyond the mvp | what ships next. | v1.1 \u2014 3 weeks | \u00b7  wcag 2.1 aa via @axe-core/playwright | \u00b7  performance gates (p95 < 10s session)...",
+      "11": "at-hack0021 \u00b7 milan ai week 2026 | team + ask | built by verixa for milan ai week 2026. | founder + lead engineer \u00b7 architecture, infra, demo, deployment | generated un...",
+      "12": "at-hack0021 \u00b7 milan ai week 2026 | atrio boardroom | mandate-enforced at the api. | two-party authorisation. cross-tenant isolation. audit-grade by default. | github.co..."
+    }
+  },
+  "results": [
+    {
+      "id": "A0.1",
+      "label": "pdf opens cleanly",
+      "passed": true,
+      "detail": "is_pdf=True"
+    },
+    {
+      "id": "A0.2",
+      "label": "page count == 12",
+      "passed": true,
+      "detail": "got 12, want 12"
+    },
+    {
+      "id": "A0.3",
+      "label": "page 1 width ~= 960 pts (16:9 widescreen)",
+      "passed": true,
+      "detail": "got 960.00"
+    },
+    {
+      "id": "A0.4",
+      "label": "page 1 height ~= 540 pts",
+      "passed": true,
+      "detail": "got 540.00"
+    },
+    {
+      "id": "B1.1",
+      "label": "page 1 contains 'atrio'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B1.2",
+      "label": "page 1 contains 'milan ai week'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B2.1",
+      "label": "page 2 contains 'the problem'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B2.2",
+      "label": "page 2 contains 'founders'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B3.1",
+      "label": "page 3 contains 'the solution'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B3.2",
+      "label": "page 3 contains 'debate'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B3.3",
+      "label": "page 3 contains 'enforce'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B3.4",
+      "label": "page 3 contains 'audit'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.1",
+      "label": "page 4 contains 'six specialists'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.2",
+      "label": "page 4 contains 'cfo'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.3",
+      "label": "page 4 contains 'cto'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.4",
+      "label": "page 4 contains 'cmo'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.5",
+      "label": "page 4 contains 'coo'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.6",
+      "label": "page 4 contains 'counsel'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B4.7",
+      "label": "page 4 contains 'facilitator'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.1",
+      "label": "page 5 contains 'treasury'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.2",
+      "label": "page 5 contains 'mandate'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.3",
+      "label": "page 5 contains 'two-party'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.4",
+      "label": "page 5 contains 'proposed'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.5",
+      "label": "page 5 contains 'first_authorised'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B5.6",
+      "label": "page 5 contains 'executed'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B6.1",
+      "label": "page 6 contains 'live demo'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B6.2",
+      "label": "page 6 contains 'boardroom debate'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B6.3",
+      "label": "page 6 contains 'second human'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B6.4",
+      "label": "page 6 contains 'boardpack'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B6.5",
+      "label": "page 6 contains 'audit export'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B7.1",
+      "label": "page 7 contains 'proof'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B7.2",
+      "label": "page 7 contains '381'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B7.3",
+      "label": "page 7 contains '90.68'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B7.4",
+      "label": "page 7 contains '24 / 24'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B7.5",
+      "label": "page 7 contains '14 / 14'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B8.1",
+      "label": "page 8 contains 'architecture'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B8.2",
+      "label": "page 8 contains 'frontend'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B8.3",
+      "label": "page 8 contains 'api'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B8.4",
+      "label": "page 8 contains 'infra'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.1",
+      "label": "page 9 contains 'sponsor pools'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.2",
+      "label": "page 9 contains 'vultr'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.3",
+      "label": "page 9 contains 'gemini'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.4",
+      "label": "page 9 contains 'featherless'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.5",
+      "label": "page 9 contains 'speechmatics'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B9.6",
+      "label": "page 9 contains 'kraken'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B10.1",
+      "label": "page 10 contains 'beyond the mvp'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B10.2",
+      "label": "page 10 contains 'v1.1'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B10.3",
+      "label": "page 10 contains 'v1.2'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B11.1",
+      "label": "page 11 contains 'team'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B11.2",
+      "label": "page 11 contains 'ask'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B11.3",
+      "label": "page 11 contains 'vultr credits'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B12.1",
+      "label": "page 12 contains 'mandate-enforced'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B12.2",
+      "label": "page 12 contains 'github.com/vsenthil7/atrio-boardroom'",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "id": "B12.3",
+      "label": "page 12 contains 'apache 2.0'",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "passed": 54,
+  "total": 54,
+  "pass_rate": 1.0
+}
