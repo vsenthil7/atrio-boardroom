@@ -6,6 +6,50 @@ A voice-first multilingual multi-agent system. Six agents around a single boardr
 
 ---
 
+## 🎬 Try the live demo
+
+**Live URL:** http://45.77.52.54:8080
+*(Hosted on Vultr in Frankfurt. HTTP only for now — the `Not secure` banner is cosmetic; nothing sensitive is exposed.)*
+
+### Judge walkthrough — 6 minutes end-to-end
+
+1. **Click "Demo founder"** on the sign-in screen (one click, no email needed).
+2. On the **Sessions** page, paste this into "What's on the table?":
+   > *Should we hire 4 senior engineers in Q3 given an 18-month runway and a tight product roadmap?*
+3. Click **Open Session**. Watch five distinct agents stream their reasoning:
+   - **CFO** does the math: ~$1M annual burn, runway shrinks 18→15 months
+   - **CTO** raises ramp-up velocity concerns on a tight roadmap
+   - **CMO** asks for market-validated demand signal
+   - **COO** flags 3–6 month onboarding overhead
+   - **Counsel** raises fiduciary risk + suggests contractors as a mitigant
+   - Session ends with a **consensus + action list** (or a captured `split` if agents disagree)
+   - **Real LLM calls** — Gemini 2.5 Flash for most agents, 2.5 Pro for Counsel. ~20–30 s total.
+4. **Go to Treasury** → propose a SHV-xStock buy for €50,000.
+5. Click **Authorise** as founder (1 of 2). Then try **Authorise** *again* — the API refuses self-second-signing. The attempt is captured in the audit log.
+6. **Open a new tab** → http://45.77.52.54:8080/signin → click **Demo CEO**.
+7. As CEO, find the pending proposal in Treasury → **Authorise** (2 of 2). Trade executes against the Kraken paper engine.
+8. **Boardpack** → click the session → **Download PDF**. Real audit-grade document, brand-typeset.
+9. **Audit** → see every turn, vote, mandate check, model invocation, treasury action — append-only, exportable as JSONL + manifest.
+
+### What's live vs. simulated
+
+| Component | State |
+|---|---|
+| Multi-agent debate · live LLMs | ✅ **Real Gemini calls** (verified end-to-end) |
+| Mandate enforcement (4 gates, API-side) | ✅ Real |
+| Two-party authorisation | ✅ Real (API + UI both enforce) |
+| Audit log (append-only DB triggers) | ✅ Real |
+| Boardpack PDF export | ✅ Real (PyMuPDF + reportlab) |
+| Audit ZIP export (JSONL + manifest) | ✅ Real |
+| LiveKit voice rooms | ✅ Token issuing live; sidecar STT bridge wired |
+| **Kraken trading** | ⚠️ **Paper-mode only** — deliberate, audit-grade testnet for the hackathon |
+| **Speechmatics STT** | ⚠️ Real client + real WS protocol; sidecar's LiveKit-subscription glue is v1.1 |
+| **Email delivery** | ⚠️ Mailhog captures (visible at `:8025`); SMTP is v1.1 — judges sign in via the one-click panel |
+
+See [`docs/SPONSOR_INTEGRATION_TRUTH.md`](./docs/SPONSOR_INTEGRATION_TRUTH.md) for the full A/B/C/D ladder per sponsor.
+
+---
+
 ## Why this is interesting
 
 | | |
@@ -22,11 +66,13 @@ A voice-first multilingual multi-agent system. Six agents around a single boardr
 
 | Layer | Stack | Tests | Coverage |
 |---|---|---|---|
-| Backend | Python 3.12 · FastAPI · SQLAlchemy 2.0 async · Postgres + pgvector | **319** ✅ | **91%** |
-| Frontend | React 18 · Vite · Tailwind · Zustand · React Query | **10** ✅ unit + **6** Playwright suites | type-checked ✅ |
-| E2E | Backend full demo flow + Playwright two-party + 5 more | covered | — |
+| Backend | Python 3.12 · FastAPI · SQLAlchemy 2.0 async · Postgres + pgvector | **381** ✅ | **90.68 %** |
+| Frontend | React 18 · Vite · Tailwind · Zustand · React Query | **15** ✅ vitest + **16/20** Playwright | type-checked ✅ |
+| E2E | Backend full demo flow + Playwright + Demo-video verification | 24/24 structural + 14/14 OCR | — |
+| Pitch deck | 12 slides verified | 54/54 structural + 12/12 OCR | — |
+| **Live LLM smoke** | 5-agent debate against real Gemini in 24.1 s | ✅ all `gemini/*`, consensus synthesised | — |
 
-Every test currently passes.  CI gate: `--cov-fail-under=85`.
+CI gate: `--cov-fail-under=85` (currently exceeding by 6 points).
 
 ---
 
@@ -35,8 +81,8 @@ Every test currently passes.  CI gate: `--cov-fail-under=85`.
 ### Local dev (no cloud accounts needed — uses mock inference)
 
 ```bash
-git clone <this repo>
-cd atrio
+git clone https://github.com/vsenthil7/atrio-boardroom
+cd atrio-boardroom
 
 # Generate the JWT keypair (one-off)
 ./scripts/gen-keys.sh
@@ -91,14 +137,14 @@ npm run dev
 ## Tests
 
 ```bash
-# Backend — 319 tests
+# Backend — 381 tests
 cd backend
 python -m pytest
 
-# Mandate violation corpus (12 cases)
+# Mandate violation corpus
 python -m pytest tests/integration/test_mandate_violation_corpus.py -v
 
-# Cross-tenant isolation (17 cases)
+# Cross-tenant isolation
 python -m pytest tests/integration/test_cross_tenant_isolation.py -v
 
 # Full demo flow
@@ -108,9 +154,13 @@ python -m pytest tests/e2e/test_full_demo_flow.py -v
 cd ../frontend
 npm test
 
-# Playwright E2E (auto-starts backend + frontend on 8000/5173)
+# Playwright E2E
 npm run e2e:install   # once
 npm run e2e
+
+# Live-LLM smoke (requires real GEMINI_API_KEY in .env)
+python demovideo/verification-a/smoke-live-gemini.py     # single agent
+python demovideo/verification-a/smoke-live-debate.py     # full 5-agent debate
 ```
 
 ---
@@ -119,32 +169,37 @@ npm run e2e
 
 | Sponsor | Role | Where to look |
 |---|---|---|
-| **Vultr** | EU compute + object storage | `docker-compose.yml`, `scripts/deploy.sh` |
+| **Vultr** | EU compute (Frankfurt, 4 vCPU/8 GB) | `deploy/01-bootstrap.sh`, `deploy/02-deploy.sh`, `deploy/03-tls.sh` |
 | **Gemini** | Facilitator + Counsel primary model | `app/inference/providers.py` → `GeminiClient` |
 | **Featherless** | CFO/CTO/CMO/COO primary models | `app/inference/providers.py` → `FeatherlessClient` |
-| **Speechmatics** | Multilingual STT | `voice/service.py` + `config/dictionaries/demo_en.txt` |
+| **Speechmatics** | Multilingual STT | `app/voice/speechmatics.py` |
 | **Kraken** | Paper-trade execution | `app/treasury/kraken.py` |
 | **LiveKit** | Voice rooms | `app/voice/service.py` |
 
-When `ATRIO_MOCK_INFERENCE=true`, every provider is replaced by the deterministic `MockClient` so the entire flow runs offline. Set `ATRIO_MOCK_INFERENCE=false` and supply the API keys in `.env` to talk to real providers.
+Full honest inventory: [`docs/SPONSOR_INTEGRATION_TRUTH.md`](./docs/SPONSOR_INTEGRATION_TRUTH.md).
 
 ---
 
-## Deploy
+## Deploy to Vultr
+
+See [`deploy/README.md`](./deploy/README.md) for the full playbook. Short version:
 
 ```bash
-REMOTE=root@your.vultr.vm ./scripts/deploy.sh
+# On your laptop, with SSH access to a fresh Ubuntu 24.04 VM:
+ssh root@<vm-ip> bash -s < deploy/01-bootstrap.sh    # OS + Docker
+ssh root@<vm-ip> bash -s < deploy/02-deploy.sh       # repo + stack + migrations + seed
+ssh root@<vm-ip> "DOMAIN=atrio.example.com bash" < deploy/03-tls.sh   # Caddy + Let's Encrypt
 ```
 
-The script rsyncs the repo, runs `docker compose up -d --build`, applies migrations, and verifies a green smoke test before exiting.
+Total: ~15 minutes from blank VM to public HTTPS demo URL.
 
 ---
 
 ## What's NOT in this hackathon build
 
 - **Authn**: magic-link only; no SSO/SAML.
-- **Voice pipeline**: token issuance is wired, but the Speechmatics + LiveKit sidecar is stubbed (will run live during the demo).
-- **Email delivery**: dev mode echoes the magic-link token in the response body; production wires SMTP.
+- **Voice pipeline sidecar**: STT client real; LiveKit room-subscription glue is v1.1.
+- **Email delivery**: Mailhog captures locally; production SMTP is v1.1. Judges use the one-click sign-in panel.
 - **Kraken live trading**: hard-disabled (`kraken_live=false`); only paper trades for the duration of the hackathon.
 
 ---
@@ -158,6 +213,8 @@ See the full project documents in this repo:
 - [`AT-Hack0021_Claude_ATRIO_DataModel_20260518.md`](./AT-Hack0021_Claude_ATRIO_DataModel_20260518.md) — Data model
 - [`AT-Hack0021_Claude_ATRIO_StoryBacklog_20260518.md`](./AT-Hack0021_Claude_ATRIO_StoryBacklog_20260518.md) — Sprint backlog
 - [`AT-Hack0021_Claude_ATRIO_TestStrategy_20260518.md`](./AT-Hack0021_Claude_ATRIO_TestStrategy_20260518.md) — Test strategy
+- [`docs/SPONSOR_INTEGRATION_TRUTH.md`](./docs/SPONSOR_INTEGRATION_TRUTH.md) — honest per-sponsor integration audit
+- [`docs/ATRIO_Traceability_LIVE.md`](./docs/ATRIO_Traceability_LIVE.md) — live build status
 
 ---
 

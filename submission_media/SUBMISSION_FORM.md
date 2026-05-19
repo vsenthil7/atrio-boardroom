@@ -4,6 +4,8 @@ All fields below are ready to paste directly into the lablab.ai form for
 AT-Hack0021 / Milan AI Week 2026. Numbers are reproducible on the repo
 (see verification-a / verification-b reports).
 
+**🎬 LIVE DEMO IS UP:** `http://45.77.52.54:8080` (Vultr · Frankfurt · 4 vCPU / 8 GB)
+
 ---
 
 ## Project name (1 line, ≤ 60 chars)
@@ -45,6 +47,21 @@ to a single advisor (fast, single point of failure) or convened with a committee
 an AI boardroom that holds a real debate, enforces a per-tenant mandate at machine
 speed, and replays every decision in six months.
 
+## Try it now
+
+**Live demo (Vultr, Frankfurt):** http://45.77.52.54:8080
+
+Click **"Demo founder"** on the sign-in screen — one click, no email needed —
+then in "What's on the table?" type:
+
+> *Should we hire 4 senior engineers in Q3 given an 18-month runway?*
+
+Watch 5 distinct AI specialists stream their reasoning live (real Gemini 2.5 calls,
+~25 s end-to-end), then go to Treasury, propose a SHV-xStock buy, try to self-second
+(API refuses), open a new tab → sign in as **Demo CEO** → second-authorise → trade
+executes against the Kraken paper engine. Download the boardpack PDF. Open the audit
+log. Six minutes, full lifecycle.
+
 ## Why we built it
 
 The wedge isn't "better LLM responses." It's the **boardroom seat between**
@@ -61,11 +78,11 @@ one-expert-on-a-call and a full human board:
   transition writes to an append-only log. Exportable as JSONL + manifest;
   ingestable by compliance.
 
-## What it does in the live demo (2-minute video)
+## What the demo video shows (2 minutes)
 
 1. **Boardroom debate** — Founder asks "Should we hire 4 senior engineers in Q3
-   given our 18-month runway?". Uploads a Q3 burn-plan PDF. Six agents stream
-   their reasoning. Dissent rounds logged. Consensus + action list rendered.
+   given our 18-month runway?". Six agents stream their reasoning live. Dissent
+   rounds logged. Consensus + action list rendered.
 2. **Treasury proposal · two-party blocked** — Founder proposes a SHV-xStock buy.
    Mandate gates check at the API. Founder authorises (1 of 2). Founder TRIES
    to self-second — REFUSED. Audit captures the attempt.
@@ -77,40 +94,36 @@ one-expert-on-a-call and a full human board:
 
 ## Why this isn't slideware
 
-Everything in the deck is reproducible from the repo:
+Everything is reproducible from the repo:
 
 - **381 / 381** backend tests pass at **90.68 %** line coverage (gate 85 %)
 - **15 / 15** vitest pass · typecheck clean
 - **16 / 20** Playwright pass against the live Docker stack
-- **24 / 24** demo video structural verification (hard API assertions)
-- **14 / 14** demo video OCR verification at 100 %
+- **24 / 24** demo-video structural verification (hard API assertions)
+- **14 / 14** demo-video OCR verification at 100 %
 - **54 / 54** pitch-deck structural verification
 - **12 / 12** pitch-deck OCR verification at 100 %
-- **13** real bugs found and fixed during the sprint, documented in the
-  commit ledger; not papered over.
+- **5 / 5** live multi-agent debate against real Gemini in 24.1 s (no mocks)
+- **15** real bugs found and fixed during the sprint, documented in the commit ledger
 
 ## Sponsor pools utilised
 
-- **Vultr** — Compute + deployment (VM target for the public demo URL)
-- **Google Gemini** — Primary inference for CFO, Counsel, Facilitator
-- **Featherless** — Specialist fallback for CTO, CMO, COO
-- **Speechmatics** — Live STT + diarisation in voice mode (sidecar wired)
-- **Kraken xStocks** — Treasury execution (paper-mode; live mode is one config flip)
+- **Vultr** — EU compute (Frankfurt, 4 vCPU / 8 GB) — the public demo URL above
+- **Google Gemini** — Primary inference for Facilitator + CFO + Counsel + treasury
+- **Featherless** — Specialist routes for CTO + CMO + COO (with Gemini fallback)
+- **Speechmatics** — Live STT WebSocket client (sidecar wiring is v1.1)
+- **Kraken xStocks** — Treasury execution (paper-mode for the hackathon; live mode is one config flip)
+- **LiveKit** — Voice rooms (token issuing live)
+
+See `docs/SPONSOR_INTEGRATION_TRUTH.md` for the full A/B/C/D honest inventory.
 
 ## Tech stack
 
-- Backend: FastAPI · SQLAlchemy · Alembic · Postgres 16 + pgvector · uvicorn
-- Frontend: React · Vite · Tailwind · Caddy (SPA, PWA-ready)
-- Infra: Docker Compose (6 services) · LiveKit · MinIO · Mailhog
+- Backend: FastAPI · SQLAlchemy 2.0 async · Alembic · Postgres 16 + pgvector · uvicorn
+- Frontend: React 18 · Vite · Tailwind · Zustand · React Query
+- Infra: Docker Compose (6 services) · Caddy · LiveKit · MinIO · Mailhog
 - Quality gates: pytest · vitest · Playwright · custom PDF + video verifications
 - License: Apache 2.0
-
-## Try it
-
-- **Live demo:** `<PUBLIC_DEMO_URL_HERE>` *(populated post-Vultr deploy)*
-- **Repo:** https://github.com/vsenthil7/atrio-boardroom
-- **One-command boot:** `make up` (requires Docker)
-- **Login:** founder@acme.co + ceo@acme.co (dev magic-link auto-fills the token)
 ```
 
 ---
@@ -179,8 +192,8 @@ verixa
 | Cover image square | `atrio/submission_media/cover-square-1200x1200.png` (60 KB) | ✅ |
 | Cover image banner | `atrio/submission_media/cover-banner-1600x900.png` (66 KB) | ✅ |
 | Cover image OG | `atrio/submission_media/cover-og-1200x630.png` (46 KB) | ✅ |
-| GitHub repo | https://github.com/vsenthil7/atrio-boardroom (28 commits, public) | ✅ |
-| Live demo URL | *<populate after Vultr deploy>* | ⏳ |
+| GitHub repo | https://github.com/vsenthil7/atrio-boardroom (33 commits, public) | ✅ |
+| **Live demo URL** | **http://45.77.52.54:8080** (Vultr, Frankfurt) | ✅ LIVE |
 
 ---
 
@@ -194,10 +207,24 @@ verixa
 | Description (main body) | "Long description" (Markdown) |
 | Cover image upload | `cover-square-1200x1200.png` |
 | GitHub URL | `https://github.com/vsenthil7/atrio-boardroom` |
-| Demo URL | *<post-Vultr>* |
+| **Demo URL** | **`http://45.77.52.54:8080`** |
 | Pitch video URL (or upload) | `atrio-walkthrough-20260519_090929-main.mp4` |
 | Pitch deck (PDF upload) | `atrio-pitch-deck-20260519_105149.pdf` |
 | Track / challenge | Collaborative Systems (+ Agentic Workflows + Multimodal Intelligence) |
 | Tags | from "Technologies / topics" list |
 | Team | Verixa (solo founder + Claude as paired engineer) |
 | License | Apache 2.0 |
+
+---
+
+## Judge instructions to add to the description
+
+If lablab.ai's description supports a short "How to try the demo" callout, use:
+
+```
+1. Open http://45.77.52.54:8080
+2. Click "Demo founder" — signs you in with one click
+3. Type a boardroom question (suggested: "Should we hire 4 senior engineers in Q3 given an 18-month runway?")
+4. Watch live multi-agent debate (real Gemini calls, ~25s)
+5. Open second tab → click "Demo CEO" → second-authorise a treasury proposal to see two-party flow
+```
