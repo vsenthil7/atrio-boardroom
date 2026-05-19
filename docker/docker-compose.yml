@@ -52,6 +52,7 @@ services:
       JWT_PRIVATE_KEY_PATH: /app/secrets/jwt_private.pem
       JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
       ATRIO_MOCK_INFERENCE: ${ATRIO_MOCK_INFERENCE:-true}
+      DEV_MAGIC_LINK_ECHO: ${DEV_MAGIC_LINK_ECHO:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       FEATHERLESS_API_KEY: ${FEATHERLESS_API_KEY:-}
       SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
@@ -62,7 +63,7 @@ services:
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecretdevsecretdevsecret123}
       MODEL_REGISTRY_PATH: /app/config/models/atrio.yaml
       PROMPTS_DIR: /app/prompts
-      CORS_ORIGINS: "http://localhost:8080,http://localhost:5173"
+      CORS_ORIGINS: "http://localhost:8080,http://localhost:5173,http://45.77.52.54:8080"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - ../config:/app/config:ro
