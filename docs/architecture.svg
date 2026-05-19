@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Georgia, serif">
+  <!-- Background -->
+  <rect width="1200" height="760" fill="#f7f4ee"/>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-size="28" font-weight="700" fill="#171615">ATRIO Boardroom — System Architecture</text>
+  <text x="600" y="62" text-anchor="middle" font-size="13" font-style="italic" fill="#615b53">Browser SPA · FastAPI gateway · Postgres+pgvector · Mock/Gemini/Featherless inference</text>
+  <line x1="200" y1="78" x2="1000" y2="78" stroke="#171615" stroke-width="2"/>
+
+  <!-- LAYER 1: Browser -->
+  <g>
+    <rect x="40" y="110" width="320" height="120" fill="#171615" stroke="#171615" stroke-width="1"/>
+    <text x="200" y="135" text-anchor="middle" font-size="11" fill="#f7f4ee" letter-spacing="2">BROWSER · SPA</text>
+    <line x1="60" y1="145" x2="340" y2="145" stroke="#cfc8bd" stroke-width="0.5"/>
+    <text x="200" y="170" text-anchor="middle" font-size="16" font-weight="700" fill="#f7f4ee">React 18 + Vite</text>
+    <text x="200" y="190" text-anchor="middle" font-size="12" fill="#cfc8bd">Tailwind · Zustand · React Query</text>
+    <text x="200" y="210" text-anchor="middle" font-size="11" fill="#a98244">SSE EventSource · LiveKit · Axios</text>
+  </g>
+
+  <!-- LAYER 2: Edge -->
+  <g>
+    <rect x="40" y="260" width="320" height="80" fill="none" stroke="#171615" stroke-width="1"/>
+    <text x="200" y="285" text-anchor="middle" font-size="11" fill="#615b53" letter-spacing="2">EDGE PROXY</text>
+    <line x1="60" y1="295" x2="340" y2="295" stroke="#cfc8bd" stroke-width="0.5"/>
+    <text x="200" y="316" text-anchor="middle" font-size="14" font-weight="700" fill="#171615">Caddy 2.8</text>
+    <text x="200" y="330" text-anchor="middle" font-size="10" fill="#615b53">/api proxy · SSE flush · CSP · static SPA</text>
+  </g>
+
+  <!-- Arrow Browser → Edge -->
+  <line x1="200" y1="230" x2="200" y2="258" stroke="#171615" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="215" y="248" font-size="9" fill="#615b53" font-style="italic">HTTPS</text>
+
+  <!-- LAYER 3: FastAPI gateway -->
+  <g>
+    <rect x="40" y="370" width="800" height="280" fill="#fff" stroke="#171615" stroke-width="2"/>
+    <rect x="40" y="370" width="800" height="24" fill="#171615"/>
+    <text x="440" y="387" text-anchor="middle" font-size="11" fill="#f7f4ee" letter-spacing="2">FASTAPI GATEWAY · 25 routes · /api/v1</text>
+
+    <!-- Routers row -->
+    <g>
+      <rect x="60" y="410" width="760" height="46" fill="#eee8de" stroke="#cfc8bd"/>
+      <text x="440" y="427" text-anchor="middle" font-size="10" fill="#615b53" letter-spacing="1.5">ROUTERS</text>
+      <text x="440" y="446" text-anchor="middle" font-size="11" font-weight="600" fill="#171615">auth · sessions · turns (SSE) · documents · treasury · mandates · audit · voice · boardpack · health</text>
+    </g>
+
+    <!-- Services row -->
+    <g>
+      <!-- Orchestrator -->
+      <rect x="60" y="476" width="180" height="92" fill="#f7f4ee" stroke="#171615"/>
+      <text x="150" y="495" text-anchor="middle" font-size="10" fill="#615b53" letter-spacing="1.5">ORCHESTRATOR</text>
+      <text x="150" y="514" text-anchor="middle" font-size="12" font-weight="700" fill="#171615">multi-agent debate</text>
+      <text x="150" y="530" text-anchor="middle" font-size="10" fill="#615b53">dissent rounds · stance</text>
+      <text x="150" y="546" text-anchor="middle" font-size="10" fill="#615b53">consensus classifier</text>
+      <text x="150" y="562" text-anchor="middle" font-size="10" fill="#a98244" font-style="italic">P5 enforced</text>
+
+      <!-- AI Gateway -->
+      <rect x="252" y="476" width="180" height="92" fill="#f7f4ee" stroke="#171615"/>
+      <text x="342" y="495" text-anchor="middle" font-size="10" fill="#615b53" letter-spacing="1.5">AI GATEWAY</text>
+      <text x="342" y="514" text-anchor="middle" font-size="12" font-weight="700" fill="#171615">registry → provider</text>
+      <text x="342" y="530" text-anchor="middle" font-size="10" fill="#615b53">primary → fallback</text>
+      <text x="342" y="546" text-anchor="middle" font-size="10" fill="#615b53">audit sink per call</text>
+      <text x="342" y="562" text-anchor="middle" font-size="10" fill="#c7361b" font-style="italic">sole inference path</text>
+
+      <!-- Treasury -->
+      <rect x="444" y="476" width="180" height="92" fill="#f7f4ee" stroke="#171615"/>
+      <text x="534" y="495" text-anchor="middle" font-size="10" fill="#615b53" letter-spacing="1.5">TREASURY</text>
+      <text x="534" y="514" text-anchor="middle" font-size="12" font-weight="700" fill="#171615">4-gate mandate</text>
+      <text x="534" y="530" text-anchor="middle" font-size="10" fill="#615b53">two-party FSM</text>
+      <text x="534" y="546" text-anchor="middle" font-size="10" fill="#615b53">expiry · idempotent</text>
+      <text x="534" y="562" text-anchor="middle" font-size="10" fill="#c7361b" font-style="italic">API-layer enforced</text>
+
+      <!-- Documents + Memory + Audit -->
+      <rect x="636" y="476" width="184" height="92" fill="#f7f4ee" stroke="#171615"/>
+      <text x="728" y="495" text-anchor="middle" font-size="10" fill="#615b53" letter-spacing="1.5">SUPPORT</text>
+      <text x="728" y="514" text-anchor="middle" font-size="11" font-weight="700" fill="#171615">Documents · Memory</text>
+      <text x="728" y="528" text-anchor="middle" font-size="11" font-weight="700" fill="#171615">Audit · Export</text>
+      <text x="728" y="544" text-anchor="middle" font-size="10" fill="#615b53">PDF/DOCX/XLSX · pgvector</text>
+      <text x="728" y="558" text-anchor="middle" font-size="10" fill="#615b53">ZIP audit · boardpack</text>
+    </g>
+
+    <!-- Bottom: principles ribbon -->
+    <g>
+      <rect x="60" y="588" width="760" height="48" fill="#a98244" opacity="0.15"/>
+      <text x="440" y="606" text-anchor="middle" font-size="10" fill="#a98244" letter-spacing="2">ARCHITECTURAL PRINCIPLES</text>
+      <text x="440" y="624" text-anchor="middle" font-size="11" font-weight="600" fill="#171615">
+        P1 Submittable always · P2 Audit-grade from S2 · P3 Mandate enforced at API · P4 Voice is delighter · P5 Registry is sole inference path
+      </text>
+    </g>
+  </g>
+
+  <!-- Arrow Edge → API -->
+  <line x1="200" y1="340" x2="200" y2="368" stroke="#171615" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- LAYER 4: Providers column on right -->
+  <g>
+    <rect x="880" y="110" width="280" height="240" fill="none" stroke="#171615" stroke-width="1"/>
+    <text x="1020" y="135" text-anchor="middle" font-size="11" fill="#615b53" letter-spacing="2">INFERENCE PROVIDERS</text>
+    <line x1="900" y1="145" x2="1140" y2="145" stroke="#cfc8bd" stroke-width="0.5"/>
+
+    <rect x="900" y="160" width="240" height="50" fill="#eee8de" stroke="#cfc8bd"/>
+    <text x="1020" y="180" text-anchor="middle" font-size="13" font-weight="700" fill="#171615">Gemini</text>
+    <text x="1020" y="198" text-anchor="middle" font-size="10" fill="#615b53">facilitator + counsel · primary</text>
+
+    <rect x="900" y="220" width="240" height="50" fill="#eee8de" stroke="#cfc8bd"/>
+    <text x="1020" y="240" text-anchor="middle" font-size="13" font-weight="700" fill="#171615">Featherless</text>
+    <text x="1020" y="258" text-anchor="middle" font-size="10" fill="#615b53">CFO · CTO · CMO · COO · primary</text>
+
+    <rect x="900" y="280" width="240" height="50" fill="#171615"/>
+    <text x="1020" y="300" text-anchor="middle" font-size="13" font-weight="700" fill="#f7f4ee">MockClient</text>
+    <text x="1020" y="318" text-anchor="middle" font-size="10" fill="#cfc8bd">deterministic · offline fallback</text>
+  </g>
+
+  <!-- Arrow gateway → providers -->
+  <path d="M 432 522 Q 700 522 880 220" fill="none" stroke="#171615" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- LAYER 5: Data + external bottom -->
+  <g>
+    <!-- Postgres -->
+    <rect x="880" y="370" width="280" height="116" fill="#a98244"/>
+    <text x="1020" y="395" text-anchor="middle" font-size="11" fill="#f7f4ee" letter-spacing="2">DATA LAYER</text>
+    <line x1="900" y1="405" x2="1140" y2="405" stroke="#f7f4ee" stroke-width="0.5" opacity="0.4"/>
+    <text x="1020" y="426" text-anchor="middle" font-size="16" font-weight="700" fill="#f7f4ee">Postgres 16 + pgvector</text>
+    <text x="1020" y="446" text-anchor="middle" font-size="11" fill="#f7f4ee" opacity="0.8">11 tables · RLS · append-only triggers</text>
+    <text x="1020" y="464" text-anchor="middle" font-size="11" fill="#f7f4ee" opacity="0.8">vector(64) embeddings · IVFFlat index</text>
+    <text x="1020" y="480" text-anchor="middle" font-size="10" fill="#f7f4ee" opacity="0.6" font-style="italic">tenant_id NOT NULL on all tables</text>
+
+    <!-- MinIO -->
+    <rect x="880" y="506" width="280" height="60" fill="#a98244" opacity="0.7"/>
+    <text x="1020" y="528" text-anchor="middle" font-size="11" fill="#f7f4ee" letter-spacing="2">BLOB STORAGE</text>
+    <text x="1020" y="548" text-anchor="middle" font-size="13" font-weight="700" fill="#f7f4ee">MinIO · S3-compatible</text>
+    <text x="1020" y="562" text-anchor="middle" font-size="10" fill="#f7f4ee" opacity="0.8">document uploads · boardpack PDFs</text>
+  </g>
+
+  <!-- Arrow gateway → data -->
+  <path d="M 820 522 L 880 428" fill="none" stroke="#171615" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- External: Kraken, SMTP, LiveKit -->
+  <g>
+    <rect x="880" y="586" width="280" height="64" fill="#c7361b"/>
+    <text x="1020" y="608" text-anchor="middle" font-size="11" fill="#f7f4ee" letter-spacing="2">EXTERNAL · paper trades only</text>
+    <text x="1020" y="628" text-anchor="middle" font-size="13" font-weight="700" fill="#f7f4ee">Kraken · LiveKit · Speechmatics · SMTP</text>
+    <text x="1020" y="644" text-anchor="middle" font-size="10" fill="#f7f4ee" opacity="0.8">kraken_live=false · TTL 600s · 9 langs</text>
+  </g>
+
+  <!-- Footer numbers -->
+  <g>
+    <line x1="40" y1="690" x2="1160" y2="690" stroke="#171615" stroke-width="2"/>
+    <text x="40" y="715" font-size="11" fill="#615b53" letter-spacing="1.5">BUILD METRICS</text>
+    <text x="40" y="735" font-size="13" font-weight="700" fill="#171615">349 backend tests · 91% coverage · 15 frontend unit · 16 Playwright E2E · 9-job CI</text>
+    <text x="40" y="752" font-size="10" fill="#615b53" font-style="italic">Cross-tenant isolation: 17 dedicated tests. Mandate violation corpus: 12 cases. Two-party authorisation bypass: proven impossible.</text>
+  </g>
+
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#171615"/>
+    </marker>
+  </defs>
+</svg>
