@@ -331,10 +331,14 @@ async def test_execute_kraken_unavailable_marks_failed(
     assert a2.state == "execution_failed"
 
 
-async def test_authorise_user_not_in_tenant(db_session, svc, tenant, founder_user, session_row, active_mandate):
+async def test_authorise_user_not_in_tenant(db_session, svc, tenant, second_tenant, founder_user, session_row, active_mandate):
     from app.db.models import User
+    # FIX 2026-05-19: use the `second_tenant` fixture so the FK constraint to
+    # tenants(id) is satisfied. The previous "some-other-tenant-id" string
+    # silently passed under SQLite (FKs off by default) but tripped the real
+    # Postgres FK constraint when the suite ran against the docker stack.
     other_tenant_user = User(
-        tenant_id="some-other-tenant-id",
+        tenant_id=second_tenant.id,
         email="x@x.com",
         display_name="X",
         role="founder",
