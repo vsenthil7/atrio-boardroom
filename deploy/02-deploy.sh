@@ -5,6 +5,11 @@
 #
 # Idempotent: clones (or pulls), brings up the stack, runs migrations,
 # seeds the demo tenant, verifies the healthcheck.
+#
+# Inference API keys: pass them as env vars when invoking this script, e.g.
+#   GEMINI_API_KEY=AIza... FEATHERLESS_API_KEY=ft_... ssh root@<IP> bash -s < deploy/02-deploy.sh
+# Or set them in /srv/atrio/atrio-boardroom/.env after this script runs +
+# restart the api container.
 
 set -euo pipefail
 exec > >(tee -a /var/log/atrio-deploy.log) 2>&1
@@ -45,6 +50,33 @@ if [ ! -f .env ]; then
         cp .env.example .env
     fi
 fi
+
+# ----- API keys + mock mode (pass through from invoking env) -----
+# These env vars override blank slots in .env so the live demo uses real LLMs.
+update_env_var() {
+    local key="$1"
+    local val="$2"
+    if [ -n "$val" ]; then
+        if grep -q "^${key}=" .env; then
+            sed -i "s|^${key}=.*|${key}=${val}|" .env
+        else
+            echo "${key}=${val}" >> .env
+        fi
+        echo "[deploy]   set ${key}"
+    fi
+}
+
+# Default to live (not mock) on a production deploy
+update_env_var "ATRIO_MOCK_INFERENCE" "${ATRIO_MOCK_INFERENCE:-false}"
+# Optional API keys -- only set if the invoker provided them
+update_env_var "GEMINI_API_KEY" "${GEMINI_API_KEY:-}"
+update_env_var "FEATHERLESS_API_KEY" "${FEATHERLESS_API_KEY:-}"
+update_env_var "SPEECHMATICS_API_KEY" "${SPEECHMATICS_API_KEY:-}"
+update_env_var "DEV_MAGIC_LINK_ECHO" "${DEV_MAGIC_LINK_ECHO:-true}"
+
+echo "[deploy] inference config in final .env:"
+grep -E '^(ATRIO_MOCK_INFERENCE|GEMINI_API_KEY|FEATHERLESS_API_KEY|SPEECHMATICS_API_KEY|DEV_MAGIC_LINK_ECHO)=' .env \
+    | sed -E 's|(_KEY=).{8,}|\1***REDACTED***|'
 
 # ----- Secrets dir for JWT signing keys -----
 mkdir -p secrets
