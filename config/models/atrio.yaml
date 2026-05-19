@@ -5,13 +5,24 @@
 #
 # When running with ATRIO_MOCK_INFERENCE=true (default in local/test), every
 # provider entry is served by the deterministic MockClient.
+#
+# Model names verified live against the Gemini API on 2026-05-19:
+#   - gemini-2.5-flash  → OK (used for cost-sensitive agents + Facilitator)
+#   - gemini-2.5-pro    → OK (used for Counsel where precision matters)
+#
+# IMPORTANT — gemini-2.5-pro caveat:
+#   gemini-2.5-pro uses internal reasoning tokens that count against
+#   maxOutputTokens. With max_tokens=1024 it routinely returns empty text
+#   because reasoning consumes the whole budget. Use it ONLY for Counsel
+#   (where reasoning is the value), with max_tokens >= 4096. For everything
+#   else use gemini-2.5-flash which doesn't have the reasoning-token issue.
 
 agents:
 
   facilitator:
     primary:
       provider: gemini
-      model: gemini-3-pro
+      model: gemini-2.5-flash
     fallback:
       - provider: featherless
         model: meta-llama/Meta-Llama-3.1-70B-Instruct
@@ -23,11 +34,11 @@ agents:
 
   cfo:
     primary:
-      provider: featherless
-      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+      provider: gemini
+      model: gemini-2.5-flash
     fallback:
-      - provider: gemini
-        model: gemini-3-pro
+      - provider: featherless
+        model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.5
     max_tokens: 768
@@ -37,10 +48,10 @@ agents:
   cto:
     primary:
       provider: featherless
-      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+      model: Qwen/Qwen2.5-72B-Instruct
     fallback:
       - provider: gemini
-        model: gemini-3-pro
+        model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.6
     max_tokens: 768
@@ -53,7 +64,7 @@ agents:
       model: meta-llama/Meta-Llama-3.1-70B-Instruct
     fallback:
       - provider: gemini
-        model: gemini-3-pro
+        model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.7
     max_tokens: 768
@@ -63,10 +74,10 @@ agents:
   coo:
     primary:
       provider: featherless
-      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+      model: mistralai/Mistral-Large-Instruct-2407
     fallback:
       - provider: gemini
-        model: gemini-3-pro
+        model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.5
     max_tokens: 768
@@ -76,23 +87,23 @@ agents:
   counsel:
     primary:
       provider: gemini
-      model: gemini-3-pro
+      model: gemini-2.5-pro
     fallback:
       - provider: featherless
         model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.4
-    max_tokens: 1024
+    max_tokens: 4096  # 2.5-pro reasoning needs headroom; 1024 returns empty
     metadata:
       role: "Legal, regulatory, fiduciary."
 
   treasury:
     primary:
-      provider: featherless
-      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+      provider: gemini
+      model: gemini-2.5-flash
     fallback:
-      - provider: gemini
-        model: gemini-3-pro
+      - provider: featherless
+        model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.2
     max_tokens: 512
