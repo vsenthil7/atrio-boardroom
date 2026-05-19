@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { consumeMagicLink, me, requestMagicLink } from "@/api/auth";
 import { apiErrorMessage } from "@/api/client";
@@ -6,14 +6,69 @@ import { useAuthStore } from "@/store/auth";
 
 type Stage = "request" | "consume";
 
+// Demo accounts seeded by /api/v1/_test/seed-demo. The "Sign in with one click"
+// panel is shown when the API is running in DEV_MAGIC_LINK_ECHO=true mode (i.e.
+// magic-link requests return the token inline). On a real production deploy
+// (no echo), this panel hides itself, so the same build is safe to use either way.
+const DEMO_USERS: { label: string; email: string; role: string }[] = [
+  { label: "Demo founder", email: "founder@acme.co", role: "founder · proposes treasury actions" },
+  { label: "Demo CEO", email: "ceo@acme.co", role: "CEO · second-signs for two-party auth" },
+];
+
 export function SignInPage(): JSX.Element {
   const [stage, setStage] = useState<Stage>("request");
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoEnabled, setDemoEnabled] = useState(false);
   const { setTokens, setUser } = useAuthStore();
   const navigate = useNavigate();
+
+  // Probe whether the API is in echo mode by sending a no-op magic-link request
+  // to a sentinel email and checking whether dev_token comes back. If yes, we
+  // know we can do one-click sign-in for the seeded demo users.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await requestMagicLink("__probe@atrio.demo");
+        if (!cancelled && r.dev_token) {
+          setDemoEnabled(true);
+        }
+      } catch {
+        // ignore probe failures — just don't show the demo panel
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function signInAs(emailToUse: string) {
+    setError(null);
+    setLoading(true);
+    try {
+      const r = await requestMagicLink(emailToUse);
+      if (!r.dev_token) {
+        setEmail(emailToUse);
+        setStage("consume");
+        setError(
+          "Demo mode is not enabled on this API. Set DEV_MAGIC_LINK_ECHO=true to enable one-click sign-in.",
+        );
+        return;
+      }
+      const tok = await consumeMagicLink(r.dev_token);
+      setTokens(tok.access_token, tok.refresh_token);
+      const u = await me();
+      setUser(u);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function onRequest(e: React.FormEvent) {
     e.preventDefault();
@@ -77,8 +132,38 @@ export function SignInPage(): JSX.Element {
         <div className="w-full max-w-md">
           <h2 className="font-display text-4xl font-bold mb-2">Sign in</h2>
           <p className="font-display italic text-sub mb-10">
-            A magic link will be sent to your email.
+            {demoEnabled
+              ? "Sign in with one click below, or use your own email."
+              : "A magic link will be sent to your email."}
           </p>
+
+          {/* Demo-user one-click panel — auto-detected via the probe. */}
+          {demoEnabled && stage === "request" && (
+            <div
+              data-testid="demo-panel"
+              className="mb-8 border-2 border-ink bg-muted/50 p-5"
+            >
+              <p className="byline mb-3">Judges · sign in with one click</p>
+              <div className="space-y-2">
+                {DEMO_USERS.map((u) => (
+                  <button
+                    key={u.email}
+                    type="button"
+                    onClick={() => signInAs(u.email)}
+                    disabled={loading}
+                    data-testid={`demo-signin-${u.email.split("@")[0]}`}
+                    className="w-full text-left border border-ink bg-paper px-4 py-3 hover:bg-ink hover:text-paper transition-colors disabled:opacity-50"
+                  >
+                    <span className="font-display text-lg font-bold block">{u.label}</span>
+                    <span className="font-ui text-xs opacity-70">{u.role}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="font-ui text-xs text-sub mt-3 italic">
+                Or use your own email below to receive a magic link.
+              </p>
+            </div>
+          )}
 
           {stage === "request" && (
             <form onSubmit={onRequest} className="space-y-5">
