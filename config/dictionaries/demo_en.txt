@@ -1,0 +1,32 @@
+# ATRIO Speechmatics custom dictionary — English
+# Format: one term per line. Multi-word terms supported.
+# Used to bias the realtime STT toward our domain vocabulary.
+
+ATRIO
+boardroom
+facilitator
+mandate
+authoriser
+two-party authorisation
+Kraken
+xStock
+SHV-xStock
+IEF-xStock
+TLT-xStock
+SPY-xStock
+QQQ-xStock
+EURUSD-xStock
+pgvector
+LiveKit
+Speechmatics
+Featherless
+Gemini
+runway
+treasury
+fiduciary
+notional
+consensus
+dissent
+agentic
+audit log
+boardpack

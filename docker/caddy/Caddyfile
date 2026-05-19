@@ -1,0 +1,35 @@
+# Caddy serves the SPA + proxies /api/v1/* to the FastAPI service.
+:80 {
+    encode zstd gzip
+
+    # API + SSE — pass through with streaming
+    handle_path /api/* {
+        reverse_proxy api:8000 {
+            flush_interval -1   # disable buffering for SSE
+            header_up Host {host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Static assets
+    root * /srv
+
+    # SPA fallback: anything not a real file falls through to index.html
+    try_files {path} /index.html
+    file_server
+
+    # Security headers — modest set for the demo
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        # Permit LiveKit's WS endpoint + the configured API.
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss:; img-src 'self' data:; frame-ancestors 'none'"
+        -Server
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}

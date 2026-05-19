@@ -1,0 +1,38 @@
+# ATRIO demo mandate — applied at tenant seed time.
+#
+# This file is the human-readable canonical record; the DB row in `mandates`
+# is the enforcement target. Updates to this file are version-bumped via the
+# seed/migrate workflow.
+
+tenant_slug: acme-co
+version: 1
+currency: EUR
+
+# Hard limits — exceeded → API returns 403 MANDATE_VIOLATION
+daily_loss_limit: 25000.00
+single_instrument_max: 50000.00
+
+permitted_instruments:
+  - SHV-xStock
+  - IEF-xStock
+  - TLT-xStock
+  - SPY-xStock
+  - QQQ-xStock
+  - EURUSD-xStock
+
+permitted_sides:
+  - buy
+  - sell
+
+# Two-party authorisation roster — by email, resolved to user_id at seed time.
+auth_users:
+  - founder@acme.co
+  - ceo@acme.co
+  - treasurer@acme.co
+
+notes: |
+  Hackathon demo mandate. Founder-tier risk envelope:
+  - 25k EUR daily loss cap
+  - 50k EUR single-position cap
+  - Two-party authorisation, three eligible humans
+  - Paper trading only (kraken_live=false)

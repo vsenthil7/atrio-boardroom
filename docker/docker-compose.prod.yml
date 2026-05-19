@@ -1,0 +1,287 @@
+# ATRIO Boardroom — production stack.
+#
+# Differences from the dev compose:
+#   - No port exposure to the host except 80/443 (Coolify Traefik handles ingress)
+#   - Postgres uses a managed volume name (postgres_data_prod)
+#   - All services have `restart: unless-stopped`
+#   - Health checks gate dependencies
+#   - Coolify labels for ingress routing + auto-renewing TLS
+#   - Resource limits — single-VM defaults sized for 2-vCPU / 4 GB RAM
+#   - No MailHog (real SMTP relay), no MinIO if using Vultr Object Storage
+#   - Loki + Promtail for log shipping (optional, behind `obs` profile)
+#
+# Deploy:
+#   docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+
+version: "3.9"
+
+x-defaults: &svc-defaults
+  restart: unless-stopped
+  deploy:
+    resources:
+      limits:
+        memory: 1g
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+
+  postgres:
+    <<: *svc-defaults
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-atrio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-atrio}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atrio} -d ${POSTGRES_DB:-atrio}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+
+  api:
+    <<: *svc-defaults
+    build:
+      context: ../backend
+      dockerfile: ../docker/api.Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-acme/atrio}/api:${ATRIO_BUILD_TAG:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ATRIO_ENV: ${ATRIO_ENV:-prod}
+      ATRIO_BUILD_SHA: ${ATRIO_BUILD_SHA:-unknown}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-atrio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-atrio}
+      JWT_TEST_SECRET: ${JWT_TEST_SECRET:?must be set, 32+ chars}
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private.pem
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public.pem
+      JWT_ALGORITHM: RS256
+      ATRIO_MOCK_INFERENCE: ${ATRIO_MOCK_INFERENCE:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?must be set}
+      FEATHERLESS_API_KEY: ${FEATHERLESS_API_KEY:?must be set}
+      SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
+      KRAKEN_API_KEY: ${KRAKEN_API_KEY:-}
+      KRAKEN_API_SECRET: ${KRAKEN_API_SECRET:-}
+      LIVEKIT_URL: ${LIVEKIT_URL:-wss://livekit.atrio.app}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?must be set}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?must be set}
+      MODEL_REGISTRY_PATH: /app/config/models/atrio.yaml
+      PROMPTS_DIR: /app/prompts
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://atrio.app}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://atrio.app}
+      SMTP_HOST: ${SMTP_HOST:?must be set}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_TLS: ${SMTP_TLS:-true}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@atrio.app}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PROMETHEUS_ENABLED: "true"
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      S3_REGION: ${S3_REGION:-eu-central-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-atrio-prod}
+    volumes:
+      - ../config:/app/config:ro
+      - ../prompts:/app/prompts:ro
+      - boardpack_data_prod:/tmp/atrio-boardpacks
+    secrets:
+      - jwt_private.pem
+      - jwt_public.pem
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/healthz', timeout=2)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "traefik.enable=true"
+      - "traefik.http.routers.atrio-api.rule=Host(`api.atrio.app`)"
+      - "traefik.http.routers.atrio-api.entrypoints=websecure"
+      - "traefik.http.routers.atrio-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.atrio-api.loadbalancer.server.port=8000"
+      # SSE needs explicit no-buffering. We do this both at Traefik level
+      # (via header passthrough) and at the API level (StreamingResponse).
+      - "traefik.http.middlewares.atrio-sse.headers.customresponseheaders.X-Accel-Buffering=no"
+      - "traefik.http.routers.atrio-api.middlewares=atrio-sse"
+
+  frontend:
+    <<: *svc-defaults
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-acme/atrio}/frontend:${ATRIO_BUILD_TAG:-latest}
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.atrio-frontend.rule=Host(`atrio.app`) || Host(`www.atrio.app`)"
+      - "traefik.http.routers.atrio-frontend.entrypoints=websecure"
+      - "traefik.http.routers.atrio-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.atrio-frontend.loadbalancer.server.port=80"
+
+  livekit:
+    <<: *svc-defaults
+    image: livekit/livekit-server:v1.8
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: ${LIVEKIT_API_KEY}:${LIVEKIT_API_SECRET}
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7882:7882/udp"  # WebRTC media must hit host network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.atrio-livekit.rule=Host(`livekit.atrio.app`)"
+      - "traefik.http.routers.atrio-livekit.entrypoints=websecure"
+      - "traefik.http.routers.atrio-livekit.tls.certresolver=letsencrypt"
+      - "traefik.http.services.atrio-livekit.loadbalancer.server.port=7880"
+
+  voice-sidecar:
+    <<: *svc-defaults
+    build:
+      context: ..
+      dockerfile: docker/voice-sidecar.Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-acme/atrio}/voice-sidecar:${ATRIO_BUILD_TAG:-latest}
+    depends_on:
+      api:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    environment:
+      ATRIO_API_BASE_URL: http://api:8000/api/v1
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+    profiles:
+      - voice
+
+  # ----------------------------------- observability (optional)
+
+  prometheus:
+    <<: *svc-defaults
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=14d
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+    profiles:
+      - obs
+
+  loki:
+    <<: *svc-defaults
+    image: grafana/loki:2.9.10
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+    profiles:
+      - obs
+
+  promtail:
+    <<: *svc-defaults
+    image: grafana/promtail:2.9.10
+    command: -config.file=/etc/promtail/promtail.yaml
+    volumes:
+      - ./loki/promtail.yaml:/etc/promtail/promtail.yaml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    profiles:
+      - obs
+
+  grafana:
+    <<: *svc-defaults
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-atrio_grafana_change_me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    profiles:
+      - obs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.atrio-grafana.rule=Host(`grafana.atrio.app`)"
+      - "traefik.http.routers.atrio-grafana.entrypoints=websecure"
+      - "traefik.http.routers.atrio-grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.atrio-grafana.loadbalancer.server.port=3000"
+
+volumes:
+  postgres_data_prod:
+  boardpack_data_prod:
+  prometheus_data:
+  loki_data:
+  grafana_data:
+
+secrets:
+  jwt_private.pem:
+    file: ../secrets/jwt_private.pem
+  jwt_public.pem:
+    file: ../secrets/jwt_public.pem
+
+# Default network — Coolify creates this automatically and binds Traefik to it.
+# In standalone deploys uncomment:
+# networks:
+#   default:
+#     name: atrio

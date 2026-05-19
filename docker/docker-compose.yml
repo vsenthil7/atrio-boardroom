@@ -1,0 +1,152 @@
+# ATRIO Boardroom — Docker Compose stack
+#
+# Brings up the entire system locally with one command:
+#   docker compose --env-file ../.env up --build
+#
+# Services:
+#   postgres   — PG 16 with pgvector extension
+#   api        — FastAPI backend (Python 3.12, uvicorn)
+#   frontend   — Static SPA served by Caddy
+#   livekit    — LiveKit dev server (rooms for voice)
+#   minio      — S3-compatible storage (documents, boardpacks)
+#   mailhog    — captures magic-link emails in dev
+#
+# Production replaces postgres → managed Vultr/Neon, minio → Vultr Object Storage,
+# mailhog → SMTP relay.
+
+version: "3.9"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atrio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atrio_dev_password}
+      POSTGRES_DB: atrio
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atrio -d atrio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: ../docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ATRIO_ENV: ${ATRIO_ENV:-demo}
+      DATABASE_URL: postgresql+asyncpg://atrio:${POSTGRES_PASSWORD:-atrio_dev_password}@postgres:5432/atrio
+      JWT_TEST_SECRET: ${JWT_TEST_SECRET:-change-me-in-prod-this-is-32-chars-min}
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private.pem
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public.pem
+      ATRIO_MOCK_INFERENCE: ${ATRIO_MOCK_INFERENCE:-true}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      FEATHERLESS_API_KEY: ${FEATHERLESS_API_KEY:-}
+      SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
+      KRAKEN_API_KEY: ${KRAKEN_API_KEY:-}
+      KRAKEN_API_SECRET: ${KRAKEN_API_SECRET:-}
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecretdevsecretdevsecret123}
+      MODEL_REGISTRY_PATH: /app/config/models/atrio.yaml
+      PROMPTS_DIR: /app/prompts
+      CORS_ORIGINS: "http://localhost:8080,http://localhost:5173"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ../config:/app/config:ro
+      - ../prompts:/app/prompts:ro
+      - boardpack_data:/tmp/atrio-boardpacks
+    secrets:
+      - jwt_private.pem
+      - jwt_public.pem
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request,sys; urllib.request.urlopen(\"http://localhost:8000/api/v1/healthz\", timeout=2)' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0
+    environment:
+      LIVEKIT_KEYS: ${LIVEKIT_API_KEY:-devkey}:${LIVEKIT_API_SECRET:-devsecretdevsecretdevsecret123}
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-atrio}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-atrio_dev_password}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+
+  voice-sidecar:
+    build:
+      context: ..
+      dockerfile: docker/voice-sidecar.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    environment:
+      ATRIO_API_BASE_URL: http://api:8000/api/v1
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecretdevsecretdevsecret123}
+      SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    profiles:
+      - voice  # opt-in: `docker compose --profile voice up`
+
+volumes:
+  postgres_data:
+  minio_data:
+  boardpack_data:
+
+secrets:
+  jwt_private.pem:
+    file: ../secrets/jwt_private.pem
+  jwt_public.pem:
+    file: ../secrets/jwt_public.pem

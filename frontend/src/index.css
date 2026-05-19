@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: theme("colors.paper");
+    color: theme("colors.ink");
+    font-feature-settings: "kern", "liga", "onum";
+  }
+  ::selection {
+    background: theme("colors.ink");
+    color: theme("colors.paper");
+  }
+  /* Print/PDF-style horizontal rule */
+  hr {
+    border: none;
+    border-top: 1px solid theme("colors.rule");
+  }
+  h1, h2, h3, h4 {
+    font-family: theme("fontFamily.display");
+    letter-spacing: -0.01em;
+  }
+  /* Subtle paper grain overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@layer components {
+  .field {
+    @apply w-full border border-rule bg-paper px-3 py-2 font-ui text-sm focus:outline-none focus:border-ink;
+  }
+  .nav-link {
+    @apply font-ui text-sm uppercase tracking-wider text-sub hover:text-ink transition-colors;
+  }
+  .nav-link-active {
+    @apply text-ink underline underline-offset-8 decoration-2;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 font-ui font-medium text-sm uppercase tracking-wider transition-all;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-paper hover:bg-accent;
+  }
+  .btn-secondary {
+    @apply btn border border-ink hover:bg-ink hover:text-paper;
+  }
+  .btn-danger {
+    @apply btn bg-accent text-paper hover:opacity-90;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 font-mono text-xs uppercase tracking-widest;
+  }
+  .badge-support { @apply badge bg-gold/15 text-gold; }
+  .badge-oppose  { @apply badge bg-accent/15 text-accent; }
+  .badge-hesitate{ @apply badge bg-ink/10 text-sub; }
+  .badge-unclear { @apply badge bg-muted text-sub; }
+  .card {
+    @apply bg-paper border border-rule shadow-sheet;
+  }
+  /* the "rule" between articles, classic broadsheet style */
+  .rule-bold {
+    @apply border-t-2 border-ink;
+  }
+  .masthead {
+    @apply font-display font-bold text-masthead leading-none tracking-tightest;
+  }
+  .deck {
+    @apply font-display italic text-deck text-sub;
+  }
+  .byline {
+    @apply font-ui text-xs uppercase tracking-widest text-sub;
+  }
+}

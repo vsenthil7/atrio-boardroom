@@ -1,0 +1,284 @@
+# ATRIO CI pipeline.
+#
+# On every push and PR:
+#   • lint backend (ruff format + ruff check)
+#   • lint frontend (eslint + tsc)
+#   • run backend tests with coverage (gate at 85%)
+#   • run frontend unit tests
+#   • run cross-tenant + mandate-violation suites as dedicated jobs
+#     (so the green badge specifically names them)
+#   • build the production images
+#   • run Playwright e2e against the built images
+#   • run Trivy filesystem scan, no HIGH or CRITICAL CVEs
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  FORCE_COLOR: "1"
+
+jobs:
+
+  # ────────────────────────────────────────── lint ───────────────────────────
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.7.4 mypy==1.13.0
+      - name: ruff format --check
+        run: ruff format --check backend
+      - name: ruff check
+        run: ruff check backend
+
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: typecheck
+        working-directory: frontend
+        run: npm run typecheck
+      - name: eslint
+        working-directory: frontend
+        run: npm run lint
+        continue-on-error: true   # don't gate on style; gate on tsc
+
+  # ────────────────────────────────────── backend tests ──────────────────────
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: pytest with coverage
+        working-directory: backend
+        env:
+          ATRIO_ENV: test
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ATRIO_MOCK_INFERENCE: "true"
+          MODEL_REGISTRY_PATH: ../config/models/atrio.yaml
+          PROMPTS_DIR: ../prompts
+        run: |
+          python -m pytest tests/ \
+            --cov=app \
+            --cov-report=term \
+            --cov-report=xml \
+            --cov-fail-under=85 \
+            --junitxml=junit.xml
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+  # The two named security suites get their own jobs so a failure shows up
+  # explicitly in PR status checks.
+  test-cross-tenant-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: pytest cross-tenant
+        working-directory: backend
+        env:
+          ATRIO_ENV: test
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ATRIO_MOCK_INFERENCE: "true"
+          MODEL_REGISTRY_PATH: ../config/models/atrio.yaml
+          PROMPTS_DIR: ../prompts
+        run: python -m pytest tests/integration/test_cross_tenant_isolation.py -v --no-cov
+
+  test-mandate-violation-corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: pytest mandate corpus
+        working-directory: backend
+        env:
+          ATRIO_ENV: test
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ATRIO_MOCK_INFERENCE: "true"
+          MODEL_REGISTRY_PATH: ../config/models/atrio.yaml
+          PROMPTS_DIR: ../prompts
+        run: python -m pytest tests/integration/test_mandate_violation_corpus.py -v --no-cov
+
+  # ────────────────────────────────────── frontend tests ─────────────────────
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: vitest
+        working-directory: frontend
+        run: npm test -- --reporter=verbose
+
+  # ───────────────────────────────────────── e2e ─────────────────────────────
+  test-e2e:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright
+        working-directory: frontend
+        env:
+          ATRIO_ENV: test
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ATRIO_MOCK_INFERENCE: "true"
+          MODEL_REGISTRY_PATH: ../config/models/atrio.yaml
+          PROMPTS_DIR: ../prompts
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+
+  # ─────────────────────────────────────── build ─────────────────────────────
+  build-images:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    permissions:
+      contents: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute image tags
+        id: meta
+        run: |
+          echo "tag_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "tag_branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+      - name: Build api image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: docker/api.Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/api:${{ steps.meta.outputs.tag_sha }}
+            ghcr.io/${{ github.repository }}/api:${{ steps.meta.outputs.tag_branch }}
+            ghcr.io/${{ github.repository }}/api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: docker/frontend.Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/frontend:${{ steps.meta.outputs.tag_sha }}
+            ghcr.io/${{ github.repository }}/frontend:${{ steps.meta.outputs.tag_branch }}
+            ghcr.io/${{ github.repository }}/frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+      - name: Build voice sidecar image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/voice-sidecar.Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/voice-sidecar:${{ steps.meta.outputs.tag_sha }}
+            ghcr.io/${{ github.repository }}/voice-sidecar:${{ steps.meta.outputs.tag_branch }}
+            ghcr.io/${{ github.repository }}/voice-sidecar:latest
+          cache-from: type=gha,scope=sidecar
+          cache-to: type=gha,scope=sidecar,mode=max
+
+  # ────────────────────────────────────── security ───────────────────────────
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy fs scan (HIGH+CRITICAL only)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          skip-dirs: node_modules,dist,.venv

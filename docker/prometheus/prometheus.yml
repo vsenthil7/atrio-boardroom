@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: atrio-prod
+    env: prod
+
+scrape_configs:
+  - job_name: atrio-api
+    metrics_path: /api/v1/metrics
+    static_configs:
+      - targets: ["api:8000"]
+        labels:
+          service: api
+
+  - job_name: livekit
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["livekit:6789"]
+        labels:
+          service: livekit
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

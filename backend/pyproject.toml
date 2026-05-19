@@ -1,0 +1,125 @@
+[project]
+name = "atrio-backend"
+version = "1.0.0"
+description = "ATRIO Boardroom backend — FastAPI + Postgres + pgvector"
+authors = [{ name = "ATRIO Team" }]
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.32.1",
+    "sqlalchemy[asyncio]==2.0.36",
+    "asyncpg==0.30.0",
+    "alembic==1.14.0",
+    "pgvector==0.3.6",
+    "pydantic==2.10.3",
+    "pydantic-settings==2.6.1",
+    "python-jose[cryptography]==3.3.0",
+    "passlib[bcrypt]==1.7.4",
+    "bcrypt==4.0.1",
+    "python-multipart==0.0.20",
+    "httpx==0.28.1",
+    "structlog==24.4.0",
+    "PyYAML==6.0.2",
+    "tenacity==9.0.0",
+    "aiosmtplib==3.0.2",
+    "boto3==1.35.76",
+    "PyMuPDF==1.25.1",
+    "python-docx==1.1.2",
+    "openpyxl==3.1.5",
+    "Pillow==11.0.0",
+    "reportlab==4.2.5",
+    "prometheus-client==0.21.1",
+    "opentelemetry-api==1.29.0",
+    "opentelemetry-sdk==1.29.0",
+    "opentelemetry-instrumentation-fastapi==0.50b0",
+    "slowapi==0.1.9",
+    "email-validator==2.2.0",
+    "numpy==2.1.3",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.25.0",
+    "pytest-cov==6.0.0",
+    "pytest-mock==3.14.0",
+    "httpx==0.28.1",
+    "freezegun==1.5.1",
+    "respx==0.22.0",
+    "factory-boy==3.3.1",
+    "aiosqlite==0.20.0",
+]
+dev = [
+    "ruff==0.8.4",
+    "mypy==1.13.0",
+    "types-PyYAML==6.0.12.20240917",
+    "types-passlib==1.7.7.20241221",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM", "RET", "PT", "S"]
+ignore = ["S101", "S105", "S106"]  # allow assert in tests, allow test passwords
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+]
+markers = [
+    "unit: unit tests",
+    "integration: integration tests with DB",
+    "e2e: end-to-end tests via HTTP",
+    "slow: slow tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/scripts/*",
+    "app/__main__.py",
+    "*/migrations/*",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+]
+show_missing = true
+skip_covered = false

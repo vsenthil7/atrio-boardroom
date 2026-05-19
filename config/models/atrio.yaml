@@ -1,0 +1,100 @@
+# ATRIO model registry — the single source of truth for agent→provider routing.
+#
+# Every agent in the codebase resolves its provider through this file (P5).
+# Hot-reload: `gateway.registry().reload()` re-reads from disk.
+#
+# When running with ATRIO_MOCK_INFERENCE=true (default in local/test), every
+# provider entry is served by the deterministic MockClient.
+
+agents:
+
+  facilitator:
+    primary:
+      provider: gemini
+      model: gemini-3-pro
+    fallback:
+      - provider: featherless
+        model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    prompt_version: v1
+    temperature: 0.6
+    max_tokens: 1024
+    metadata:
+      role: "Plans the session, summarises, and synthesises consensus."
+
+  cfo:
+    primary:
+      provider: featherless
+      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    fallback:
+      - provider: gemini
+        model: gemini-3-pro
+    prompt_version: v1
+    temperature: 0.5
+    max_tokens: 768
+    metadata:
+      role: "Cash, runway, ROI, treasury impact."
+
+  cto:
+    primary:
+      provider: featherless
+      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    fallback:
+      - provider: gemini
+        model: gemini-3-pro
+    prompt_version: v1
+    temperature: 0.6
+    max_tokens: 768
+    metadata:
+      role: "Engineering pragmatism, technical risk, build-vs-buy."
+
+  cmo:
+    primary:
+      provider: featherless
+      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    fallback:
+      - provider: gemini
+        model: gemini-3-pro
+    prompt_version: v1
+    temperature: 0.7
+    max_tokens: 768
+    metadata:
+      role: "Positioning, narrative, customer perception."
+
+  coo:
+    primary:
+      provider: featherless
+      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    fallback:
+      - provider: gemini
+        model: gemini-3-pro
+    prompt_version: v1
+    temperature: 0.5
+    max_tokens: 768
+    metadata:
+      role: "Execution feasibility, sequencing, operational risk."
+
+  counsel:
+    primary:
+      provider: gemini
+      model: gemini-3-pro
+    fallback:
+      - provider: featherless
+        model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    prompt_version: v1
+    temperature: 0.4
+    max_tokens: 1024
+    metadata:
+      role: "Legal, regulatory, fiduciary."
+
+  treasury:
+    primary:
+      provider: featherless
+      model: meta-llama/Meta-Llama-3.1-70B-Instruct
+    fallback:
+      - provider: gemini
+        model: gemini-3-pro
+    prompt_version: v1
+    temperature: 0.2
+    max_tokens: 512
+    metadata:
+      role: "Translates board consensus into a Kraken-executable plan."

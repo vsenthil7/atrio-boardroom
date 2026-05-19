@@ -1,0 +1,80 @@
+# Tag-triggered deploy to the Vultr production host.
+# Triggered by pushing a tag matching v*.*.* (e.g. v1.0.0).
+#
+# Requires GitHub secrets:
+#   PROD_HOST            — production VM hostname/IP (e.g. atrio.app)
+#   PROD_USER            — SSH user with docker permissions (e.g. atrio)
+#   PROD_SSH_PRIVATE_KEY — SSH key authorised for that user
+#   PROD_KNOWN_HOSTS     — the host's SSH host key (output of `ssh-keyscan -H $HOST`)
+
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ref to deploy (defaults to current branch)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Sync repo to host
+        run: |
+          rsync -avz --delete \
+            --exclude=node_modules --exclude=__pycache__ \
+            --exclude=.pytest_cache --exclude=.ruff_cache \
+            --exclude=dist --exclude=htmlcov \
+            --exclude=.git --exclude=.env \
+            --exclude=secrets/jwt_*.pem \
+            -e "ssh -i ~/.ssh/id_rsa" \
+            ./ ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/srv/atrio/
+
+      - name: Pull updated images and restart
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} <<'EOSSH'
+            set -euo pipefail
+            cd /srv/atrio
+            export ATRIO_BUILD_TAG="${{ github.ref_name }}"
+            export ATRIO_BUILD_SHA="${{ github.sha }}"
+            echo "Pulling images for tag $ATRIO_BUILD_TAG"
+            docker compose --env-file .env -f docker/docker-compose.prod.yml pull
+            echo "Restarting services"
+            docker compose --env-file .env -f docker/docker-compose.prod.yml up -d --remove-orphans
+            echo "Running migrations"
+            docker compose --env-file .env -f docker/docker-compose.prod.yml exec -T api alembic upgrade head
+          EOSSH
+
+      - name: Smoke test deployed stack
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
+            "cd /srv/atrio && API_URL=https://api.atrio.app/api/v1 ./scripts/smoke.sh"
+
+      - name: Post-deploy notification
+        if: always()
+        run: |
+          echo "Deployment of ${{ github.ref_name }} to prod: ${{ job.status }}"
