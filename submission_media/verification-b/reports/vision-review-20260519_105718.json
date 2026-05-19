@@ -1,0 +1,107 @@
+{
+  "pages": 12,
+  "rubric": [
+    {
+      "rubric": "slide-1-title",
+      "passed": true,
+      "needles": [
+        "ATRIO",
+        "Your AI boardroom"
+      ]
+    },
+    {
+      "rubric": "slide-2-problem",
+      "passed": true,
+      "needles": [
+        "The problem",
+        "Founders"
+      ]
+    },
+    {
+      "rubric": "slide-3-solution",
+      "passed": true,
+      "needles": [
+        "DEBATE",
+        "ENFORCE",
+        "AUDIT"
+      ]
+    },
+    {
+      "rubric": "slide-4-six-agents",
+      "passed": true,
+      "needles": [
+        "CFO",
+        "CTO",
+        "Facilitator"
+      ]
+    },
+    {
+      "rubric": "slide-5-treasury",
+      "passed": true,
+      "needles": [
+        "TREASURY",
+        "proposed",
+        "executed"
+      ]
+    },
+    {
+      "rubric": "slide-6-demo",
+      "passed": true,
+      "needles": [
+        "Live demo",
+        "BOARDPACK"
+      ]
+    },
+    {
+      "rubric": "slide-7-proof",
+      "passed": true,
+      "needles": [
+        "381",
+        "90.68"
+      ]
+    },
+    {
+      "rubric": "slide-8-architecture",
+      "passed": true,
+      "needles": [
+        "FRONTEND",
+        "API",
+        "INFRA"
+      ]
+    },
+    {
+      "rubric": "slide-9-sponsors",
+      "passed": true,
+      "needles": [
+        "Vultr",
+        "Gemini",
+        "Kraken"
+      ]
+    },
+    {
+      "rubric": "slide-10-roadmap",
+      "passed": true,
+      "needles": [
+        "v1.1",
+        "v1.2"
+      ]
+    },
+    {
+      "rubric": "slide-11-team",
+      "passed": true,
+      "needles": [
+        "Verixa",
+        "Vultr credits"
+      ]
+    },
+    {
+      "rubric": "slide-12-closing",
+      "passed": true,
+      "needles": [
+        "Mandate-enforced",
+        "Apache 2.0"
+      ]
+    }
+  ],
+  "pass_rate": 1.0
+}
