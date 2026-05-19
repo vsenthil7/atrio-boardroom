@@ -67,10 +67,24 @@ COPY --chown=atrio:atrio migrations ./migrations
 COPY --chown=atrio:atrio alembic.ini ./
 COPY --chown=atrio:atrio pyproject.toml ./
 
-USER atrio
+# Entrypoint script written via printf so this works without BuildKit heredocs.
+# Runs as root briefly to chown the boardpack volume (mounted root:root by
+# Docker regardless of container USER), then drops to atrio uid 999 for the API.
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'if [ -d /tmp/atrio-boardpacks ]; then' \
+    '    chown -R atrio:atrio /tmp/atrio-boardpacks || true' \
+    'fi' \
+    'exec su atrio -c "alembic upgrade head && exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*"' \
+    > /usr/local/bin/atrio-entrypoint \
+    && chmod 0755 /usr/local/bin/atrio-entrypoint
+
+# NB: do NOT switch to USER atrio. The entrypoint runs as root briefly,
+# then exec-su drops to atrio uid 999 for the API.
 EXPOSE 8000
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
     CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://localhost:8000/api/v1/healthz', timeout=2)" || exit 1
 
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*"]
+ENTRYPOINT ["/usr/local/bin/atrio-entrypoint"]
