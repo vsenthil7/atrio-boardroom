@@ -16,6 +16,13 @@
 #   because reasoning consumes the whole budget. Use it ONLY for Counsel
 #   (where reasoning is the value), with max_tokens >= 4096. For everything
 #   else use gemini-2.5-flash which doesn't have the reasoning-token issue.
+#
+# Token budget rationale (verified 2026-05-19 in production):
+#   At max_tokens=768 the 4 specialists (CFO/CTO/CMO/COO) were truncating
+#   their answers mid-sentence (~120 chars chopped off when their analysis
+#   ran 3-4 paragraphs). Bumping to 1536 -- enough headroom for a full
+#   boardroom answer (3-4 paras of detailed reasoning) without bloating cost
+#   noticeably.
 
 agents:
 
@@ -28,7 +35,7 @@ agents:
         model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.6
-    max_tokens: 1024
+    max_tokens: 1536
     metadata:
       role: "Plans the session, summarises, and synthesises consensus."
 
@@ -41,7 +48,7 @@ agents:
         model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.5
-    max_tokens: 768
+    max_tokens: 1536
     metadata:
       role: "Cash, runway, ROI, treasury impact."
 
@@ -54,7 +61,7 @@ agents:
         model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.6
-    max_tokens: 768
+    max_tokens: 1536
     metadata:
       role: "Engineering pragmatism, technical risk, build-vs-buy."
 
@@ -67,7 +74,7 @@ agents:
         model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.7
-    max_tokens: 768
+    max_tokens: 1536
     metadata:
       role: "Positioning, narrative, customer perception."
 
@@ -80,7 +87,7 @@ agents:
         model: gemini-2.5-flash
     prompt_version: v1
     temperature: 0.5
-    max_tokens: 768
+    max_tokens: 1536
     metadata:
       role: "Execution feasibility, sequencing, operational risk."
 
@@ -106,6 +113,6 @@ agents:
         model: meta-llama/Meta-Llama-3.1-70B-Instruct
     prompt_version: v1
     temperature: 0.2
-    max_tokens: 512
+    max_tokens: 1024
     metadata:
       role: "Translates board consensus into a Kraken-executable plan."
