@@ -1,29 +1,30 @@
-# Caddy serves the SPA + proxies /api/v1/* to the FastAPI service.
+# Caddy serves the SPA + proxies /api/* to the FastAPI service.
+# Fixed 2026-05-19: use `handle` (preserves prefix) not `handle_path` (strips it),
+# and wrap the SPA branch in a `handle` block so /api/* doesn't fall through to
+# file_server (which only allows GET/HEAD and was returning 405 on POST).
 :80 {
     encode zstd gzip
 
-    # API + SSE — pass through with streaming
-    handle_path /api/* {
+    # API + SSE -- pass through with streaming. PREFIX PRESERVED.
+    handle /api/* {
         reverse_proxy api:8000 {
             flush_interval -1   # disable buffering for SSE
             header_up Host {host}
-            header_up X-Forwarded-Proto {scheme}
         }
     }
 
-    # Static assets
-    root * /srv
+    # SPA + static assets -- everything else.
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
 
-    # SPA fallback: anything not a real file falls through to index.html
-    try_files {path} /index.html
-    file_server
-
-    # Security headers — modest set for the demo
+    # Security headers
     header {
         X-Frame-Options DENY
         X-Content-Type-Options nosniff
         Referrer-Policy strict-origin-when-cross-origin
-        # Permit LiveKit's WS endpoint + the configured API.
         Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss:; img-src 'self' data:; frame-ancestors 'none'"
         -Server
     }
