@@ -1,0 +1,129 @@
+{
+  "videos": [
+    "atrio-walkthrough-20260519_090929-main.mp4",
+    "atrio-walkthrough-20260519_090929-secondary-2.mp4"
+  ],
+  "frames_total": 108,
+  "rubric": [
+    {
+      "rubric": "title-card-opening",
+      "passed": true,
+      "needles": [
+        "ATRIO",
+        "MILAN"
+      ]
+    },
+    {
+      "rubric": "stage-1-scene-card",
+      "passed": true,
+      "needles": [
+        "STAGE 1",
+        "BOARDROOM DEBATE",
+        "GIVEN",
+        "WHEN",
+        "THEN"
+      ]
+    },
+    {
+      "rubric": "stage-1-six-agents-pill",
+      "passed": true,
+      "needles": [
+        "six agents",
+        "streaming"
+      ]
+    },
+    {
+      "rubric": "stage-1-consensus-pill",
+      "passed": true,
+      "needles": [
+        "Consensus",
+        "action list"
+      ]
+    },
+    {
+      "rubric": "stage-2-scene-card",
+      "passed": true,
+      "needles": [
+        "STAGE 2",
+        "TREASURY",
+        "MANDATE",
+        "TWO-PARTY"
+      ]
+    },
+    {
+      "rubric": "stage-2-propose-pill",
+      "passed": true,
+      "needles": [
+        "Proposed",
+        "SHV-xStock"
+      ]
+    },
+    {
+      "rubric": "stage-2-self-second-blocked",
+      "passed": true,
+      "needles": [
+        "Self-second BLOCKED",
+        "audit recorded"
+      ]
+    },
+    {
+      "rubric": "stage-3-scene-card",
+      "passed": true,
+      "needles": [
+        "STAGE 3",
+        "SECOND HUMAN",
+        "AUTHORISE"
+      ]
+    },
+    {
+      "rubric": "stage-3-ceo-sees-proposal",
+      "passed": true,
+      "needles": [
+        "CEO sees",
+        "first"
+      ]
+    },
+    {
+      "rubric": "stage-3-trade-executed",
+      "passed": true,
+      "needles": [
+        "EXECUTED",
+        "Kraken paper"
+      ]
+    },
+    {
+      "rubric": "stage-4-scene-card",
+      "passed": true,
+      "needles": [
+        "STAGE 4",
+        "BOARDPACK",
+        "AUDIT EXPORT"
+      ]
+    },
+    {
+      "rubric": "stage-4-session-closed",
+      "passed": true,
+      "needles": [
+        "Session closed"
+      ]
+    },
+    {
+      "rubric": "stage-4-audit-export",
+      "passed": true,
+      "needles": [
+        "Audit",
+        "JSONL"
+      ]
+    },
+    {
+      "rubric": "title-card-closing",
+      "passed": true,
+      "needles": [
+        "ATRIO",
+        "Mandate-enforced",
+        "Apache 2.0"
+      ]
+    }
+  ],
+  "pass_rate": 1.0
+}
