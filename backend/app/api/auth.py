@@ -3,15 +3,18 @@
 POST /auth/magic-link        { email }                → 202 always (no enum)
 POST /auth/magic-link/consume { token }               → tokens
 POST /auth/refresh           { refresh_token }        → new tokens
+POST /auth/dev-signin        { email }                → tokens (DEMO MODE ONLY)
 GET  /auth/me                                         → CurrentUser
 """
 from __future__ import annotations
 
 import hashlib
+import os
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, status
 from jose import JWTError, jwt
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 
 from app.api.deps import CurrentUserDep, DbSession
@@ -40,6 +43,18 @@ log = get_logger(__name__)
 
 def _hash_token(t: str) -> str:
     return hashlib.sha256(t.encode()).hexdigest()
+
+
+def _demo_mode_enabled() -> bool:
+    """Whether dev/demo conveniences are turned on.
+
+    True when either:
+      - settings.atrio_env in {local, test, demo}, OR
+      - DEV_MAGIC_LINK_ECHO env var is truthy (judge-mode override on prod-like deploys)
+    """
+    if get_settings().atrio_env in ("local", "test", "demo"):
+        return True
+    return os.environ.get("DEV_MAGIC_LINK_ECHO", "").lower() in ("true", "1", "yes")
 
 
 @router.post(
@@ -81,9 +96,8 @@ async def request_magic_link(body: MagicLinkRequest, db: DbSession) -> dict[str,
             kind="auth_magic_link_issued",
             payload={"email": email},
         )
-        # Return token in dev/test mode so tests/Playwright can sign in headlessly.
-        settings = get_settings()
-        if settings.atrio_env in ("local", "test", "demo"):
+        # Return token in dev/test/demo mode so tests/Playwright/judges can sign in headlessly.
+        if _demo_mode_enabled():
             return {"status": "ok", "dev_token": token}
     return {"status": "ok"}
 
@@ -166,6 +180,82 @@ async def refresh_token(body: RefreshRequest, db: DbSession) -> TokenResponse:
     return TokenResponse(
         access_token=access,
         refresh_token=refresh_new,
+        expires_in=settings.jwt_access_expires_seconds,
+    )
+
+
+class DevSigninRequest(BaseModel):
+    """Body for /auth/dev-signin -- demo only."""
+    email: EmailStr
+
+
+class DevSigninStatus(BaseModel):
+    """Body for GET /auth/dev-signin -- probe whether judge-mode is enabled."""
+    enabled: bool
+    demo_emails: list[str]
+
+
+_DEMO_ALLOWLIST = {"founder@acme.co", "ceo@acme.co"}
+
+
+@router.get(
+    "/dev-signin",
+    response_model=DevSigninStatus,
+    summary="Probe whether judge-mode (one-click sign-in) is enabled",
+)
+async def dev_signin_status() -> DevSigninStatus:
+    """Used by the SPA to decide whether to render the demo panel.
+    Always 200; returns enabled=true only when demo conveniences are turned on."""
+    enabled = _demo_mode_enabled()
+    return DevSigninStatus(
+        enabled=enabled,
+        demo_emails=sorted(_DEMO_ALLOWLIST) if enabled else [],
+    )
+
+
+@router.post(
+    "/dev-signin",
+    response_model=TokenResponse,
+    summary="One-click sign-in for the seeded demo accounts (DEMO MODE ONLY)",
+)
+async def dev_signin(body: DevSigninRequest, db: DbSession) -> TokenResponse:
+    """Issues access tokens directly for the seeded demo users.
+
+    Gated by _demo_mode_enabled(). Only the two seeded demo emails are allowed
+    -- attempts with any other address are refused so this can never be used
+    to compromise real accounts on a misconfigured prod deploy.
+    """
+    if not _demo_mode_enabled():
+        raise Unauthenticated("demo sign-in disabled on this deployment")
+
+    email = body.email.lower()
+    if email not in _DEMO_ALLOWLIST:
+        raise Unauthenticated(f"{email} is not a seeded demo account")
+
+    settings = get_settings()
+    user = (
+        await db.execute(select(User).where(User.email == email, User.status == "active"))
+    ).scalar_one_or_none()
+    if user is None:
+        raise Unauthenticated(
+            f"{email} not seeded -- run POST /_test/seed-demo first"
+        )
+
+    user.last_login_at = datetime.utcnow()
+    await db.flush()
+
+    access = create_access_token(subject=user.id, tenant_id=user.tenant_id, role=user.role)
+    refresh = create_refresh_token(subject=user.id, tenant_id=user.tenant_id)
+    await AuditService(db).write(
+        tenant_id=user.tenant_id,
+        actor_user_id=user.id,
+        kind="auth_signed_in",
+        payload={"method": "dev_signin"},
+    )
+    log.info("dev_signin", email=email, user_id=user.id)
+    return TokenResponse(
+        access_token=access,
+        refresh_token=refresh,
         expires_in=settings.jwt_access_expires_seconds,
     )
 
