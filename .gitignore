@@ -59,8 +59,9 @@ secrets/*.crt
 *.pdf
 !**/AT-Hack0021_*.md
 !demo/q3-burn-plan.pdf
-# Pitch-deck PDF is a deliverable — keep it tracked
+# Submission deliverables — keep tracked
 !submission_media/atrio-pitch-deck-*.pdf
+!submission_media/JUDGE_TEST_SCRIPT.pdf
 
 # Local boardpacks dir
 /tmp/atrio-boardpacks/
@@ -84,5 +85,6 @@ demo/*.webm
 
 # Submission media — track the deliverable artefacts; ignore working dirs
 submission_media/previews/
+submission_media/preview/
 submission_media/verification-b/pages/
 submission_media/verification-a/reports/*.tmp
