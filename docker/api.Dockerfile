@@ -19,7 +19,7 @@ WORKDIR /build
 COPY pyproject.toml ./
 COPY app ./app
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install -e ".[]" --no-deps && \
+    pip install --prefix=/install -e "." --no-deps && \
     pip install --prefix=/install \
         "fastapi==0.115.6" \
         "uvicorn[standard]==0.34.0" \
