@@ -60,3 +60,6 @@ secrets/*.crt
 
 # Local boardpacks dir
 /tmp/atrio-boardpacks/
+
+# FILE BACKUP RULE folders (pre-edit backups)
+_backup/
