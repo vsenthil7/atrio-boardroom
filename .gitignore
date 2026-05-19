@@ -58,6 +58,7 @@ secrets/*.crt
 *.zip
 *.pdf
 !**/AT-Hack0021_*.md
+!demo/q3-burn-plan.pdf
 
 # Local boardpacks dir
 /tmp/atrio-boardpacks/
@@ -67,3 +68,14 @@ _backup/
 
 # Incremental TypeScript build cache
 *.tsbuildinfo
+
+# Demo video pipeline
+demovideo/.runner/node_modules/
+demovideo/.runner/test-results-demo/
+demovideo/.runner/playwright-report/
+demovideo/results/creation/latest.txt
+demovideo/verification-b/frames/
+demovideo/verification-a/reports/*.tmp
+demo/_backup/
+demo/*.webm
+# but DO keep mp4 recordings (use git add -f for new ones)

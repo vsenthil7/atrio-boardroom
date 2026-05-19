@@ -1,0 +1,13 @@
+{
+  "name": "atrio-demovideo-runner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Isolated Playwright runner for ATRIO demo video. Kept out of the main frontend workspace so package versions cannot drift.",
+  "scripts": {
+    "test": "playwright test --config=playwright.demo.config.ts --reporter=line",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.2"
+  }
+}
